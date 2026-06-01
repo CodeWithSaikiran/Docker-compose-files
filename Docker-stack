@@ -1,0 +1,47 @@
+services:
+  food:
+    image: nginx
+    ports:
+      - '1111:80'
+    networks:
+      - food-network
+      - insta-network
+    volumes:
+      - food-vol:/usr/share/nginx/html
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 100M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+
+  insta:
+    image: httpd
+    ports:
+      - '2222:80'
+    networks:
+      - food-network
+      - insta-network
+    volumes:
+      - insta-vol:/usr/share/nginx/html
+    deploy:
+      replicas: 4
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 100M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+
+networks:
+  food-network:
+  insta-network:
+
+
+volumes:
+  food-vol:
+  insta-vol:
