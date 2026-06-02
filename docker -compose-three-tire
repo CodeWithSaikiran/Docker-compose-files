@@ -1,0 +1,50 @@
+services:
+  mysql-db:
+    build: ./database-sql
+    container_name: auth-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: user_auth
+    ports:
+      - "3306:3306"
+    networks:
+      - auth-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend-java:
+    build: ./backend-java
+    container_name: auth-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/user_auth?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root123
+      JWT_SECRET: ${JWT_SECRET:-MySuperSecretKey2024ForJWT12345678901234567890}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    networks:
+      - auth-network
+    restart: unless-stopped
+
+  frontend-angular:
+    build: ./frontend-angular
+    container_name: auth-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-java
+    networks:
+      - auth-network
+    restart: unless-stopped
+
+networks:
+  auth-network:
+    driver: bridge
